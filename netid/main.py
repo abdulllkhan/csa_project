@@ -6,7 +6,7 @@ MemSize = 1000 # memory size, in reality, the memory size should be 2^32, but fo
 class InsMem(object):
     def __init__(self, name, ioDir):
         self.id = name
-        
+        os.path.join(ioDir,"input")
         with open(os.path.join(ioDir, "imem.txt")) as im:
             self.IMem = [data.replace("\n", "") for data in im.readlines()]
 
