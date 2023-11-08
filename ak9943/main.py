@@ -393,10 +393,10 @@ class SingleStageCore(Core):
 
 class registerPipeline(object):
     def __init__(self):
-        self.IF_ID={"PC":0, "rawInstruction":0}
-        self.ID_EX={"PC":0, "instruction":0, "rs":0 , "rt":0}
-        self.EX_MEM={"PC":0, "instruction":0,  "ALUresult": 0, "rt":0}
-        self.MEM_WB={"PC":0, "instruction":0,  "Wrt_data": 0,"ALUresult": 0, "rt":0}
+        self.IF_ID = {"PC": 0, "rawInstruction": 0}
+        self.ID_EX = {"PC": 0, "instruction": 0, "rs": 0, "rt": 0}
+        self.EX_MEM = {"PC": 0, "instruction": 0,  "ALUresult": 0, "rt": 0}
+        self.MEM_WB = {"PC": 0, "instruction": 0,  "Wrt_data": 0, "ALUresult": 0, "rt": 0}
 
 class PerformanceMetrics(Core):
     def __init__(self, ioDir, dir2, ss_cycle):
@@ -413,22 +413,23 @@ class PerformanceMetrics(Core):
         ss_IPC = 1 / ss_CPI
         ss_IPC = round(ss_IPC, 6)
         self.newFile.write("Instructions per cycle: " + str(ss_IPC) + "\n")
+        self.newFile.write("Instructions: " + str(x) + "\n")
 
 class checkHazards():
-    def hazardRegWrite(self, pr:registerPipeline, rs):
+    def hazardRegWrite(self, pr:registerPipeline, rs):  # hazard check memory write-back stage
         return  rs != 0 and pr.MEM_WB["instruction"]  \
                 and pr.MEM_WB["instruction"]["registerWrite"] \
                 and pr.MEM_WB["instruction"]["Wrt_reg_addr"] == rs
-    def hazardLoad(self, pr:registerPipeline, rs1, rs2):
+    def hazardLoad(self, pr:registerPipeline, rs1, rs2):  # load instruction hazards check. checks if rs1 and rs2 are similar to rd_mem
         return pr.ID_EX["instruction"] \
                 and pr.ID_EX["instruction"]["rd_mem"] \
                 and (pr.ID_EX["instruction"]["Wrt_reg_addr"] == int(rs1, 2) or pr.ID_EX["instruction"]["Wrt_reg_addr"] == int(rs2, 2))
-    def hazardMEM(self, pr:registerPipeline, rs):
+    def hazardMEM(self, pr:registerPipeline, rs): # memory stage hazards check related to register writes
         return  pr.MEM_WB["instruction"] \
                 and pr.MEM_WB["instruction"]["registerWrite"] \
                 and pr.MEM_WB["instruction"]["Wrt_reg_addr"] != 0 \
                 and pr.MEM_WB["instruction"]["Wrt_reg_addr"] == rs
-    def hazardEX(self,pr:registerPipeline, rs):
+    def hazardEX(self,pr:registerPipeline, rs):  # execute stage hazard check related to register writes
         return  pr.EX_MEM["instruction"] \
                 and pr.EX_MEM["instruction"]["registerWrite"] \
                 and not pr.EX_MEM["instruction"]["rd_mem"] \
