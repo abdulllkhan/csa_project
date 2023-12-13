@@ -1,0 +1,17 @@
+----------------------------------------------------------------------
+State after executing cycle: 0
+IF_IDPC: 0
+IF_IDrawInstruction: 00000000010000000000000100000011
+ID_EXPC: 0
+ID_EXinstruction: 0
+ID_EXrs: 0
+ID_EXrt: 0
+EX_MEMPC: 0
+EX_MEMinstruction: 0
+EX_MEMALUresult: 0
+EX_MEMrt: 0
+MEM_WBPC: 0
+MEM_WBinstruction: 0
+MEM_WBWrt_data: 0
+MEM_WBALUresult: 0
+MEM_WBrt: 0

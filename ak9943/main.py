@@ -276,21 +276,21 @@ class SingleStageCore(Core):
                 imm = imm[::-1] # reversing immediate
                 self.state.EX = {
                                     "nop": False,  
-                                    "Read_data1": self.myRF.readRF(int(rs1, 2)), 
-                                    "Read_data2": self.myRF.readRF(int(rs2, 2)),
+                                    "aluControl": "0010", 
                                     "imm": int(imm, 2), 
                                     "Rs": 0, 
+                                    "Read_data2": self.myRF.readRF(int(rs2, 2)),
+                                    "Read_data1": self.myRF.readRF(int(rs1, 2)), 
                                     "Rt": 0, 
                                     "pcJump": 0,
-                                    "is_I_type": False, 
                                     "rd_mem": 0, 
+                                    "is_I_type": False, 
                                     "aluSource": 1, 
-                                    "aluControl": "0010", 
-                                    "alu_op": "00",
-                                    "Wrt_reg_addr": "X", 
                                     "wrt_mem": 1, 
-                                    "registerWrite": 0, 
+                                    "alu_op": "00",
                                     "branch": 0, 
+                                    "Wrt_reg_addr": "X", 
+                                    "registerWrite": 0, 
                                     "memReg": "X"
                                 }
            
@@ -303,21 +303,21 @@ class SingleStageCore(Core):
                 func3 = instructionReverse[12:15][::-1]
                 self.state.EX = {
                                     "nop": False, 
+                                    "Rt": 0, 
                                     "Read_data1": self.myRF.readRF(int(rs1, 2)), 
                                     "Read_data2": self.myRF.readRF(int(rs2, 2)),
                                     "imm": "X", 
                                     "Rs": 0, 
-                                    "Rt": 0, 
+                                    "branch": 1, 
                                     "pcJump": twosComplimentOfBinary(imm, 13),
                                     "is_I_type": False, 
-                                    "rd_mem": 0, 
+                                    "alu_op": "01",
                                     "aluSource": 0, 
                                     "aluControl": "0110", 
-                                    "alu_op": "01",
+                                    "rd_mem": 0, 
                                     "Wrt_reg_addr": "X", 
-                                    "wrt_mem": 0,  
                                     "registerWrite": 0, 
-                                    "branch": 1, 
+                                    "wrt_mem": 0,  
                                     "memReg": "X", 
                                     "func3": func3
                                 }
@@ -331,20 +331,20 @@ class SingleStageCore(Core):
                 self.state.EX = {
                                     "nop" : False, 
                                     "Read_data1" : self.state.IF['PC'], 
-                                    "Read_data2" : 4, 
                                     "imm":"X", "Rs" : 0, 
-                                    "Rt" : 0, 
-                                    "pcJump" : twosComplimentOfBinary(imm,21), 
-                                    "is_I_type" : False, 
-                                    "rd_mem" : 0, 
-                                    "aluSource" :1, 
-                                    "aluControl" :"0010", 
-                                    "alu_op" : "10", 
-                                    "Wrt_reg_addr" : int(rd,2), 
-                                    "wrt_mem" : 0, 
+                                    "Read_data2" : 4, 
                                     "registerWrite" : 1, 
+                                    "pcJump" : twosComplimentOfBinary(imm,21), 
+                                    "Rt" : 0, 
+                                    "rd_mem" : 0, 
+                                    "is_I_type" : False, 
+                                    "aluControl" :"0010", 
+                                    "Wrt_reg_addr" : int(rd,2), 
+                                    "alu_op" : "10", 
+                                    "aluSource" :1, 
                                     "branch" :1, 
                                     "memReg" :0, 
+                                    "wrt_mem" : 0, 
                                     "func3" :"X"
                                 }
                 
@@ -398,22 +398,52 @@ class registerPipeline(object):
         self.EX_MEM = {"PC": 0, "instruction": 0,  "ALUresult": 0, "rt": 0}
         self.MEM_WB = {"PC": 0, "instruction": 0,  "Wrt_data": 0, "ALUresult": 0, "rt": 0}
 
+# class PerformanceMetrics(Core):
+#     def __init__(self, ioDir, dir2, ss_cycle):
+#         self.newFile = open(dir2 + "/PerformanceMetrics_Result.txt", "w")
+#         self.newFile.write("Single Stage Core Performance Metrics-----------------------------\n")
+#         self.newFile.write("Number of cycles taken: " + str(ss_cycle) + "\n")
+#         with open(ioDir + "/imem.txt", "r") as fp:
+#             x = len(fp.readlines())
+#             x = x / 4
+            
+#         ss_CPI = ss_cycle / x
+#         ss_CPI = round(ss_CPI, 5)
+#         self.newFile.write("Cycles per instruction: " + str(ss_CPI) + "\n")
+#         ss_IPC = 1 / ss_CPI
+#         ss_IPC = round(ss_IPC, 6)
+#         self.newFile.write("Instructions per cycle: " + str(ss_IPC) + "\n")
+#         self.newFile.write("Instructions: " + str(x) + "\n")
+
 class PerformanceMetrics(Core):
-    def __init__(self, ioDir, dir2, ss_cycle):
-        self.newFile = open(dir2 + "/PerformanceMetrics_Result.txt", "w")
+    def __init__(self, ioDir,  dir2, ss_cycle, fs_cycle):
+        self.newFile = open( dir2 +   "/PerformanceMetrics_Result.txt", "w")
+
         self.newFile.write("Single Stage Core Performance Metrics-----------------------------\n")
-        self.newFile.write("Number of cycles taken: " + str(ss_cycle) + "\n")
+        self.newFile.write("Number of cycles taken: "  + str(ss_cycle) + "\n")  
+
         with open(ioDir + "/imem.txt", "r") as fp:
             x = len(fp.readlines())
-            x = x / 4
+            x = x/4
             
-        ss_CPI = ss_cycle / x
+        ss_CPI = ss_cycle/ x
         ss_CPI = round(ss_CPI, 5)
-        self.newFile.write("Cycles per instruction: " + str(ss_CPI) + "\n")
-        ss_IPC = 1 / ss_CPI
+        self.newFile.write("Cycles per instruction: " + str(ss_CPI) + "\n") 
+
+        ss_IPC = 1 /ss_CPI
         ss_IPC = round(ss_IPC, 6)
-        self.newFile.write("Instructions per cycle: " + str(ss_IPC) + "\n")
-        self.newFile.write("Instructions: " + str(x) + "\n")
+        self.newFile.write("Instructions per cycle: " + str(ss_IPC) + "\n") 
+
+        self.newFile.write("\nFive Stage Core Performance Metrics-----------------------------\n")
+        self.newFile.write("Number of cycles taken: " + str(fs_cycle) + "\n")  
+
+        fs_CPI = fs_cycle/ x
+        fs_CPI = round(fs_CPI, 5)
+        self.newFile.write("Cycles per instruction: " + str(fs_CPI) + "\n") 
+
+        fs_IPC = 1 /fs_CPI
+        fs_IPC = round(fs_IPC, 6)
+        self.newFile.write("Instructions per cycle: " + str(fs_IPC) + "\n") 
 
 class checkHazards():
     def hazardRegWrite(self, pr:registerPipeline, rs):  # hazard check memory write-back stage
@@ -437,47 +467,368 @@ class checkHazards():
                 and pr.EX_MEM["instruction"]["Wrt_reg_addr"] == rs
 
 class FiveStageCore(Core):
-    def __init__(self, ioDir, imem, dmem):
-        super(FiveStageCore, self).__init__(os.path.join(ioDir, "FS_"), imem, dmem)
-        self.opFilePath = os.path.join(ioDir, "StateResult_FS.txt")
+
+    def __init__(self, ioDir, outputDir, imem, dmem):
+        super(FiveStageCore, self).__init__(ioDir + "/FS_", outputDir, imem, dmem)
+        self.opFilePath = outputDir + "/StateResult_FS.txt"
+
+    def writeBack(self):
+
+        if not self.state.WB["nop"]:
+            instruction = self.regPipeline.MEM_WB["instruction"]
+
+            if instruction["registerWrite"]:
+                Reg_addr = instruction["Wrt_reg_addr"]
+                Wrt_reg_addr = self.regPipeline.MEM_WB["Wrt_data"]
+                self.myRF.writeRF(Reg_addr, Wrt_reg_addr)
+
+    def loadStore(self):
+
+        self.nextState.WB["nop"] = self.state.MEM["nop"]
+
+        if not self.state.MEM["nop"]:
+            pc = self.regPipeline.EX_MEM["PC"]
+            instruction = self.regPipeline.EX_MEM["instruction"]
+            alu_result = self.regPipeline.EX_MEM["ALUresult"]
+            rs2 = self.regPipeline.EX_MEM["Rs2"]
+
+            if instruction["wrt_mem"]:
+                writeData = self.myRF.readRF(rs2)
+                writeAddress = alu_result
+                self.ext_dmem.writeDataMem(writeAddress, writeData)
+            
+            if instruction["rd_mem"]:
+                readAddress = alu_result
+                wrt_mem_data = self.ext_dmem.readDataMem(readAddress)
+ 
+            if instruction["memReg"] == 1:
+                self.regPipeline.MEM_WB["Wrt_data"] = wrt_mem_data    
+            else:
+                self.regPipeline.MEM_WB["Wrt_data"] = alu_result
+
+            self.regPipeline.MEM_WB["PC"] = pc
+            self.regPipeline.MEM_WB["instruction"] = instruction
+
+    def instructionFetch(self):
+        self.nextState.ID["nop"]=self.state.IF["nop"]
+      
+        if not self.state.IF["nop"]:
+            self.regPipeline.IF_ID["rawInstruction"] = self.ext_imem.readInstr(self.state.IF["PC"])
+            self.regPipeline.IF_ID["PC"] = self.state.IF["PC"]
+            instructionReverse=self.regPipeline.IF_ID["rawInstruction"][ : : -1]
+            
+            opcode = instructionReverse[0:7]
+            if opcode == "1111111":
+                self.nextState.ID["nop"] = self.state.IF["nop"]=True
+            else:
+                self.nextState.IF["nop"] = False
+                self.nextState.IF["PC"] = self.state.IF["PC"] + 4
+                
+                if self.checkHazards.hazardLoad(self.regPipeline, instructionReverse[15: 20][ : : -1], instructionReverse[20: 25][ : : -1]):
+                    self.nextState.ID["nop"] = True
+                    self.nextState.IF["PC"] = self.state.IF["PC"]
+
+    def instructionExecute(self):
+
+        self.nextState.MEM["nop"] = self.state.EX["nop"]
+
+        if not self.state.EX["nop"]:
+            instruction = self.regPipeline.ID_EX["instruction"]
+            pc = self.regPipeline.ID_EX["PC"]
+            rs2 = self.regPipeline.ID_EX["Rs2"]
+            self.state.EX = self.regPipeline.ID_EX["instruction"]
+
+            if self.state.EX["imm"] == "X":
+                op2 = self.state.EX["Read_data2"]            
+            else:
+                op2 = self.state.EX["imm"]
+            
+            # Addition instruction
+            if self.state.EX["aluControl"] == "0010":
+                alu_result = self.state.EX["Read_data1"] + op2
+            
+            # Subtraction instruction
+            if self.state.EX["aluControl"] == "0110":
+                alu_result = self.state.EX["Read_data1"] - op2
+            
+            # AND instruction
+            if self.state.EX["aluControl"] == "0000":
+                alu_result = self.state.EX["Read_data1"] & op2
+            
+            # OR instruction
+            if self.state.EX["aluControl"] == "0001":
+                alu_result = self.state.EX["Read_data1"] | op2
+            
+            # XOR instruction
+            if self.state.EX["aluControl"] == "0011":
+                alu_result = self.state.EX["Read_data1"] ^ op2
+      
+            self.regPipeline.EX_MEM["ALUresult"] = alu_result
+            self.regPipeline.EX_MEM["instruction"] = instruction
+            self.regPipeline.EX_MEM["Rs2"] = rs2
+            self.regPipeline.EX_MEM["PC"] = pc
+
+    def instructionDecode(self):
+
+        self.nextState.EX["nop"] = self.state.ID["nop"]
+
+        if not self.state.ID["nop"]:
+            instructionReverse = self.regPipeline.IF_ID["rawInstruction"][ : : -1]
+            self.regPipeline.ID_EX["PC"] = self.regPipeline.IF_ID["PC"]
+            pc = self.regPipeline.IF_ID["PC"]
+            opcode = instructionReverse[0: 7]
+
+            #R-type instruction
+            if opcode == "1100110": 
+                rs1 = instructionReverse[15: 20][ : : -1]
+                rs2 = instructionReverse[20: 25][ : : -1]
+                rd = instructionReverse[7: 12][ : : -1]
+                func7 = instructionReverse[25: 32][ : : -1]
+                func3 = instructionReverse[12: 15][ : : -1] + func7[1]
+                
+                aluContol = {"0000":"0010", 
+                                "1100":"0001", 
+                                "1110":"0000", 
+                                "0001":"0110", 
+                                "1000":"0011"
+                            }
+                
+                self.regPipeline.ID_EX["instruction"] = {"nop": False, 
+                                                            "Read_data1": self.myRF.readRF(int(rs1, 2)), 
+                                                            "Read_data2": self.myRF.readRF(int(rs2, 2)), 
+                                                            "imm": "X", 
+                                                            "pcJump": 0, 
+                                                            "Rs": int(rs1, 2) , 
+                                                            "Rt": int(rs2, 2), 
+                                                            "Wrt_reg_addr": int(rd, 2), 
+                                                            "is_I_type": False, 
+                                                            "rd_mem": 0, 
+                                                            "aluSource": 0, 
+                                                            "aluControl":aluContol[func3],
+                                                            "wrt_mem": 0,  
+                                                            "alu_op": "10", 
+                                                            "registerWrite": 1, 
+                                                            "memReg": 0, # order changed here
+                                                            "branch":0 
+                                                        }
+                
+            # I-type instruction
+            if opcode == "1100100": 
+                rs1 = instructionReverse[15: 20][ : : -1]
+                rd = instructionReverse[7: 12][ : : -1]
+                imm = instructionReverse[20: 32][ : : -1]
+                func3 = instructionReverse[12: 15][ : : -1]
+                
+                aluContol = {"000":"0010", 
+                                "111":"0000", 
+                                "110":"0001", 
+                                "100":"0011"
+                            }
+                
+                self.regPipeline.ID_EX["instruction"] = {"nop": False, 
+                                                            "Read_data1": self.myRF.readRF(int(rs1, 2)), 
+                                                            "Read_data2": 0, 
+                                                            "imm": twosComplimentOfBinary(imm, 12), 
+                                                            "pcJump": 0, 
+                                                            "Rs": int(rs1, 2), 
+                                                            "Rt": 0, 
+                                                            "Wrt_reg_addr": int(rd, 2), 
+                                                            "is_I_type": True, 
+                                                            "rd_mem": 0, 
+                                                            "aluSource":1, 
+                                                            "aluControl":aluContol[func3],
+                                                            "wrt_mem": 0, 
+                                                            "alu_op": "00", 
+                                                            "registerWrite": 1, 
+                                                            "branch":0, 
+                                                            "memReg":0
+                                                        }
+                
+            # I-type Instruction
+            if opcode == "1100000": 
+                rs1 = instructionReverse[15: 20][ : : -1]
+                imm = instructionReverse[20: 32][ : : -1]
+                rd = instructionReverse[7: 12][ : : -1]
+                func3 = instructionReverse[12: 15][ : : -1]
+                
+                self.regPipeline.ID_EX["instruction"] = {"nop": False, 
+                                                            "Read_data1": self.myRF.readRF(int(rs1, 2)), 
+                                                            "Read_data2": 0, 
+                                                            "imm": twosComplimentOfBinary(imm, 12), 
+                                                            "pcJump": 0, 
+                                                            "Rs": int(rs1, 2), 
+                                                            "Rt": 0, 
+                                                            "Wrt_reg_addr": int(rd, 2), 
+                                                            "is_I_type": False, 
+                                                            "rd_mem": 1, 
+                                                            "aluSource": 1, 
+                                                            "aluControl": "0010",
+                                                            "wrt_mem": 0, 
+                                                            "alu_op": "00", 
+                                                            "registerWrite": 1, 
+                                                            "branch": 0, 
+                                                            "memReg": 1
+                                                        }
+
+            # S-type Instruction
+            if opcode == "1100010": 
+                rs1 = instructionReverse[15: 20][ : : -1]
+                rs2 = instructionReverse[20: 25][ : : -1]
+                imm = instructionReverse[7: 12] + instructionReverse[25: 32]
+                imm = imm[ : : -1]
+                
+                self.regPipeline.ID_EX["instruction"] = {"nop": False, 
+                                                            "Read_data1": self.myRF.readRF(int(rs1, 2)), 
+                                                            "Read_data2": self.myRF.readRF(int(rs2, 2)), 
+                                                            "imm": int(imm, 2), 
+                                                            "Rs": int(rs1, 2), 
+                                                            "Rt": int(rs2, 2), 
+                                                            "pcJump": 0, 
+                                                            "is_I_type": False, 
+                                                            "rd_mem": 0, 
+                                                            "aluSource": 1,
+                                                            "aluControl": "0010", 
+                                                            "alu_op": "00", 
+                                                            "Wrt_reg_addr": "X", 
+                                                            "wrt_mem": 1, 
+                                                            "registerWrite": 0, 
+                                                            "branch": 0, 
+                                                            "memReg": "X"
+                                                        }
+
+            # SB-type Instruction
+            if opcode == "1100011": 
+                rs1 = instructionReverse[15:20][ : : -1]
+                rs2 = instructionReverse[20:25][ : : -1]
+                imm = "0" + instructionReverse[8: 12] + instructionReverse[25: 31] + instructionReverse[7] + instructionReverse[31]
+                imm = imm[ : : -1]
+                func3 = instructionReverse[12: 15][ : : -1]
+
+                self.regPipeline.ID_EX["instruction"] = {"nop": False, 
+                                                            "Read_data1": self.myRF.readRF(int(rs1, 2)), 
+                                                            "Read_data2": self.myRF.readRF(int(rs2, 2)), 
+                                                            "imm": "X", 
+                                                            "Rs": int(rs1, 2), 
+                                                            "Rt": int(rs2, 2), 
+                                                            "pcJump": twosComplimentOfBinary(imm, 13), 
+                                                            "is_I_type": False, 
+                                                            "rd_mem": 0, 
+                                                            "aluSource": 0, 
+                                                            "aluControl": "0110", 
+                                                            "alu_op": "01", 
+                                                            "Wrt_reg_addr": "X", 
+                                                            "wrt_mem": 0, 
+                                                            "registerWrite": 0, 
+                                                            "branch": 1, 
+                                                            "memReg": "X", 
+                                                            "func3": func3
+                                                        }
+                
+            # UJ-type Instruction 
+            if opcode == "1111011":
+                rs1 = instructionReverse[15:20][ : : -1]
+                imm = "0" + instructionReverse[21: 31] + instructionReverse[20] + instructionReverse[12: 20]  + instructionReverse[31] 
+                imm = imm[ : : -1]
+                rd = instructionReverse[7:12][ : : -1]
+
+                self.regPipeline.ID_EX["instruction"] = {"nop": False, 
+                                                            "Read_data1": pc, 
+                                                            "Read_data2": 4, 
+                                                            "imm": "X", 
+                                                            "Rs": 0, 
+                                                            "Rt": 0, 
+                                                            "pcJump": twosComplimentOfBinary(imm, 21), 
+                                                            "is_I_type": False, 
+                                                            "rd_mem": 0, 
+                                                            "aluSource": 1, 
+                                                            "aluControl": "0010", 
+                                                            "alu_op": "10", 
+                                                            "Wrt_reg_addr": int(rd, 2), 
+                                                            "wrt_mem": 0, 
+                                                            "registerWrite": 1, 
+                                                            "branch": 1, 
+                                                            "memReg": 0, 
+                                                            "func3": "X"
+                                                        }
+                
+            if self.checkHazards.hazardRegWrite(self.regPipeline,self.regPipeline.ID_EX["instruction"]["Rs"]):
+                self.regPipeline.ID_EX["instruction"]["Read_data1"] = self.regPipeline.MEM_WB["Wrt_data"]
+            
+            if self.checkHazards.hazardRegWrite(self.regPipeline, self.regPipeline.ID_EX["instruction"]["Rt"]):
+                self.regPipeline.ID_EX["instruction"]["Read_data2"] = self.regPipeline.MEM_WB["Wrt_data"]
+
+            self.regPipeline.ID_EX["Rs2"] = self.regPipeline.ID_EX["instruction"]["Rt"]
+            self.regPipeline.ID_EX["Rs1"] = self.regPipeline.ID_EX["instruction"]["Rs"]
+
+            if self.checkHazards.hazardEX(self.regPipeline,self.regPipeline.ID_EX["Rs1"]):
+                self.regPipeline.ID_EX["instruction"]["Read_data1"] = self.regPipeline.EX_MEM["ALUresult"]
+            elif self.checkHazards.hazardMEM(self.regPipeline,self.regPipeline.ID_EX["Rs1"]):
+                self.regPipeline.ID_EX["instruction"]["Read_data1"] = self.regPipeline.MEM_WB["Wrt_data"]
+
+            if self.regPipeline.ID_EX["instruction"]["imm"] == "X":
+                if self.checkHazards.hazardEX(self.regPipeline,self.regPipeline.ID_EX["Rs2"]):
+                    self.regPipeline.ID_EX["instruction"]["Read_data2"] = self.regPipeline.EX_MEM["ALUresult"]
+                elif self.checkHazards.hazardMEM(self.regPipeline,self.regPipeline.ID_EX["Rs2"]):
+                    self.regPipeline.ID_EX["instruction"]["Read_data2"] = self.regPipeline.MEM_WB["Wrt_data"]
+
+            if self.regPipeline.ID_EX["instruction"]["branch"]:
+                if self.regPipeline.ID_EX["instruction"]["func3"] == "000" and self.regPipeline.ID_EX["instruction"]["Read_data2"] - self.regPipeline.ID_EX["instruction"]["Read_data1"] == 0: # subtraction changed
+                    self.nextState.IF["nop"] = False
+                    self.nextState.IF["PC"] = pc + (self.regPipeline.ID_EX["instruction"]["pcJump"])
+                    self.state.IF["nop"] = self.nextState.EX["nop"] = self.nextState.ID["nop"] = True
+                
+                elif self.regPipeline.ID_EX["instruction"]["func3"] == "001" and  self.regPipeline.ID_EX["instruction"]["Read_data1"] - self.regPipeline.ID_EX["instruction"]["Read_data2"] !=0 :
+                    self.nextState.IF["nop"] = False
+                    self.nextState.IF["PC"] = pc + (self.regPipeline.ID_EX["instruction"]["pcJump"])
+                    self.state.IF["nop"] = self.nextState.EX["nop"] = self.nextState.ID["nop"] = True
+                
+                elif self.regPipeline.ID_EX["instruction"]["func3"] == "X" :
+                    self.nextState.IF["nop"] = False
+                    self.nextState.IF["PC"] = pc + (self.regPipeline.ID_EX["instruction"]["pcJump"])
+                    self.state.IF["nop"] = self.nextState.ID["nop"] = True
+                
+                else:
+                    self.nextState.EX["nop"] = True
+        
+        else:
+            self.regPipeline.ID_EX = {"PC":0, "instruction":0, "rs":0 , "rt":0}
 
     def step(self):
         # Your implementation
         # --------------------- WB stage ---------------------
-        
-        
+        self.writeBack()
         
         # --------------------- MEM stage --------------------
-        
-        
+        self.loadStore()
         
         # --------------------- EX stage ---------------------
-        
-        
+        self.instructionExecute()
         
         # --------------------- ID stage ---------------------
-        
-        
+        self.instructionDecode()
         
         # --------------------- IF stage ---------------------
+        self.instructionFetch()
         
         self.halted = True
         if self.state.IF["nop"] and self.state.ID["nop"] and self.state.EX["nop"] and self.state.MEM["nop"] and self.state.WB["nop"]:
             self.halted = True
         
         self.myRF.outputRF(self.cycle) # dump RF
-        self.printState(self.nextState, self.cycle) # print states after executing cycle 0, cycle 1, cycle 2 ... 
+        self.printState(self.regPipeline, self.cycle) # print states after executing cycle 0, cycle 1, cycle 2 ... 
         
         self.state = self.nextState #The end of the cycle and updates the current state with the values calculated in this cycle
+        self.nextState = State()
         self.cycle += 1
 
+        return self.cycle
+
     def printState(self, state, cycle):
-        printstate = ["-"*70+"\n", "State after executing cycle: " + str(cycle) + "\n"]
-        printstate.extend(["IF." + key + ": " + str(val) + "\n" for key, val in state.IF.items()])
-        printstate.extend(["ID." + key + ": " + str(val) + "\n" for key, val in state.ID.items()])
-        printstate.extend(["EX." + key + ": " + str(val) + "\n" for key, val in state.EX.items()])
-        printstate.extend(["MEM." + key + ": " + str(val) + "\n" for key, val in state.MEM.items()])
-        printstate.extend(["WB." + key + ": " + str(val) + "\n" for key, val in state.WB.items()])
+        printstate = ["-" * 70 + "\n", "State after executing cycle: " + str(cycle) + "\n"]
+        printstate.extend(["IF_ID" + key + ": " + str(val) + "\n" for key, val in state.IF_ID.items()])
+        printstate.extend(["ID_EX" + key + ": " + str(val) + "\n" for key, val in state.ID_EX.items()])
+        printstate.extend(["EX_MEM" + key + ": " + str(val) + "\n" for key, val in state.EX_MEM.items()])
+        printstate.extend(["MEM_WB" + key + ": " + str(val) + "\n" for key, val in state.MEM_WB.items()])
 
         if(cycle == 0): perm = "w"
         else: perm = "a"
@@ -493,11 +844,14 @@ if __name__ == "__main__":
         folders = [f for f in os.listdir(ioDir_main) if os.path.isdir(os.path.join(ioDir_main, f))]
 
         for testdir in folders:
+
             ioDir = os.path.join(ioDir_main,testdir)
             print("IO Directory:", ioDir)
             
             dir1 = os.path.dirname(os.path.dirname(ioDir))
+            
             fname = os.path.basename(ioDir)
+            
             dir2 = os.path.join(dir1, "output_ak9943")
             
             if not os.path.exists(dir2):
@@ -509,19 +863,30 @@ if __name__ == "__main__":
                 os.makedirs(dir2)
             
             imem = InsMem("Imem", ioDir, dir2)
+
+            dmem_fs = DataMem("FS", ioDir, dir2)
             dmem_ss = DataMem("SS", ioDir, dir2)
     
+            fsCore = FiveStageCore(ioDir, dir2, imem, dmem_fs)
             ssCore = SingleStageCore(ioDir, dir2, imem, dmem_ss)
             
+            # while loop
             while(True):
+
                 if not ssCore.halted:
                     ss_cycle = ssCore.step()
+
+                if not fsCore.halted:
+                    fs_cycle = fsCore.step()
                     
-                if ssCore.halted: # not really needed
+                if fsCore.halted and ssCore.halted: # not really needed
                     break
 
-            PerformanceMetrics(ioDir, dir2, ss_cycle)
-            dmem_ss.outputDataMem()   
+            PerformanceMetrics(ioDir, dir2, ss_cycle, fs_cycle)
+
+            dmem_fs.outputDataMem()
+
+            dmem_ss.outputDataMem()
      
     # # parse arguments for input file location
     # parser = argparse.ArgumentParser(description='RV32I processor')
