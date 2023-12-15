@@ -424,7 +424,7 @@ class PerformanceMetrics(Core):
 
         with open(ioDir + "/imem.txt", "r") as fp:
             x = len(fp.readlines())
-            x = x/4
+            x = x / 4
             
         ss_CPI = ss_cycle/ x
         ss_CPI = round(ss_CPI, 5)
@@ -433,6 +433,7 @@ class PerformanceMetrics(Core):
         ss_IPC = 1 /ss_CPI
         ss_IPC = round(ss_IPC, 6)
         self.newFile.write("Instructions per cycle: " + str(ss_IPC) + "\n") 
+        self.newFile.write("Number of Instructions: " + str(x) + "\n")
 
         self.newFile.write("\nFive Stage Core Performance Metrics-----------------------------\n")
         self.newFile.write("Number of cycles taken: " + str(fs_cycle) + "\n")  
@@ -444,6 +445,7 @@ class PerformanceMetrics(Core):
         fs_IPC = 1 /fs_CPI
         fs_IPC = round(fs_IPC, 6)
         self.newFile.write("Instructions per cycle: " + str(fs_IPC) + "\n") 
+        self.newFile.write("Number of Instructions: " + str(x) + "\n")
 
 class checkHazards():
     def hazardRegWrite(self, pr:registerPipeline, rs):  # hazard check memory write-back stage
